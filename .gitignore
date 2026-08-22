@@ -35,14 +35,18 @@ ENV/
 # Qdrant (in-memory, nothing to persist)
 qdrant_storage/
 
-# Next.js / Node
+# Database
+*.sqlite3
+db.sqlite3
+
+# Node / Vite / Next.js
 frontend/.next/
 frontend/node_modules/
 frontend/out/
 frontend/.env.local
-frontend/.env.development.local
-frontend/.env.test.local
-frontend/.env.production.local
+vite-frontend/node_modules/
+vite-frontend/dist/
+vite-frontend/.env.local
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

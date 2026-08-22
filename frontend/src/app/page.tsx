@@ -718,26 +718,21 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col justify-between bg-slate-950 text-slate-100">
       {/* Nav bar */}
-      <nav className="flex items-center justify-between px-6 py-4 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="flex items-center gap-2.5">
-          <Dna className="w-5 h-5 text-cyan-400" />
-          <span className="text-sm font-bold text-white tracking-wide font-mono">TruthDNA</span>
-          <span
-            className="px-2 py-0.5 rounded text-xs font-mono"
-            style={{
-              background: "rgba(0,212,255,0.1)",
-              color: "#00d4ff",
-              border: "1px solid rgba(0,212,255,0.2)",
-            }}
-          >
-            v0.1
-          </span>
-        </div>
+      <nav className="relative z-10 flex flex-wrap items-center justify-between px-6 py-4 border-b border-slate-800/60">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1 rounded bg-slate-900 border border-slate-800 text-xs font-mono text-slate-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>3-Pillar Protocol</span>
+          <div className="flex items-center gap-2">
+            <Dna className="w-5 h-5 text-cyan-400" />
+            <span className="text-sm font-bold text-white tracking-wide">TruthDNA</span>
+            <span className="px-2 py-0.5 rounded text-xs font-mono"
+              style={{ background: "rgba(0,212,255,0.1)", color: "#00d4ff", border: "1px solid rgba(0,212,255,0.2)" }}>
+              v0.1
+            </span>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 mt-2 sm:mt-0">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-xs text-slate-400">3-Pillar Diagnostic</span>
         </div>
       </nav>
 

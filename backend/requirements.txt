@@ -12,3 +12,6 @@ google-genai
 duckduckgo-search
 opencv-python-headless
 numpy
+django
+django-ninja
+django-cors-headers

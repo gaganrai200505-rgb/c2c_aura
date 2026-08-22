@@ -38,6 +38,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from admin import log_analysis, router as admin_router
 from agent import build_analysis_prompt, synthesize_report
 from dna_extractor import compute_phash, extract_clip_embedding
 from forensics import (
@@ -106,6 +107,9 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# Admin router
+app.include_router(admin_router)
 
 # CORS — open for local development; restrict before production
 app.add_middleware(
@@ -329,6 +333,17 @@ async def analyze_media(file: UploadFile = File(...)):
 
     elapsed = time.monotonic() - start_time
     logger.info(f"Analysis complete in {elapsed:.2f}s — lineage_match={lineage_match_found}")
+
+    # Log to admin dashboard history
+    log_analysis(
+        filename=file.filename or "unknown",
+        media_type=media_type,
+        ela_score=ela_score,
+        lineage_match=lineage_match_found,
+        embedding_valid=embedding_valid,
+        search_failed=search_failed,
+        duration_sec=elapsed,
+    )
 
     return report
 

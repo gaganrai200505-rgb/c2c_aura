@@ -75,40 +75,37 @@ pip install -r requirements.txt
 
 ```bash
 cd truthdna/backend
-python main.py
+python manage.py runserver 8000
 ```
 
-The backend will:
+The Django backend will:
 1. Validate `GEMINI_API_KEY` — exits immediately if missing
-2. **Auto-seed the Qdrant ledger** with 2 baseline historical records
-3. Start FastAPI on `http://localhost:8000`
-
-> ⚠️ **CRITICAL — In-Memory Ledger:** Qdrant runs in `:memory:` mode.
-> All seeded records are **LOST when the backend process exits**.
-> The `seed_ledger.py` script is called automatically on every startup via
-> `@app.on_event("startup")`. You do NOT need to run it manually —
-> but if you ever run it standalone, use: `python seed_ledger.py`
+2. **Auto-seed the Qdrant ledger** with baseline historical records on startup
+3. Run Django migrations and initialize the persistent SQLite database
+4. Start Django Ninja on `http://localhost:8000`
 
 ---
 
-### Step 4 — Install & Start the Frontend (first time only)
+### Step 4 — Install & Start the Vite Frontend
 
 ```bash
-cd truthdna/frontend
+cd truthdna/vite-frontend
 npm install
 npm run dev
 ```
 
+The frontend will run at `http://localhost:5173`.
+
 ---
 
-## API Endpoints
+## API Endpoints & Interfaces
 
 | Method | URL | Description |
 |--------|-----|-------------|
 | `GET` | `http://localhost:8000/health` | Liveness check + ledger stats |
 | `POST` | `http://localhost:8000/api/analyze` | Upload media → `MediaDNAReport` |
-| `GET` | `http://localhost:8000/docs` | Interactive Swagger UI |
-| `GET` | `http://localhost:8000/redoc` | ReDoc documentation |
+| `GET` | `http://localhost:8000/admin/` | **Native Django Admin Panel** (User: `admin` / Pass: `adminpassword`) |
+| `GET` | `http://localhost:8000/api/docs` | Interactive Django Ninja OpenAPI / Swagger UI |
 
 ### Upload Example (curl)
 ```bash
@@ -121,11 +118,11 @@ curl -X POST http://localhost:8000/api/analyze \
 ## Architecture
 
 ```
-[Next.js UI :3000]
+[Vite + React UI :5173]
       │
       │ POST /api/analyze (multipart, ≤20MB)
       ▼
-[FastAPI :8000]
+[Django + Django Ninja :8000]
       │
       ├─► forensics.py     → ELA score (0.0–1.0), frame extraction (15s cap)
       ├─► dna_extractor.py → pHash + CLIP embedding (zero-vector fallback)
