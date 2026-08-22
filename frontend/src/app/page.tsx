@@ -552,26 +552,30 @@ function HeroDropzone({ onFile }: { onFile: (file: File) => void }) {
   return (
     <div className="w-full max-w-3xl mx-auto py-8">
       {/* Logo / Hero */}
-      <div className="text-center mb-10 space-y-3">
-        <div
-          className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-2"
-          style={{
-            background: "linear-gradient(135deg, rgba(0,212,255,0.15), rgba(124,58,237,0.15))",
-            border: "1px solid rgba(0,212,255,0.3)",
-          }}
-        >
-          <Dna className="w-8 h-8 text-cyan-400" />
+      <div className="text-center mb-10 space-y-4">
+        {/* Protocol Badge */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-900/90 border border-cyan-500/30 text-xs font-mono font-medium text-cyan-300 shadow-xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          <span>NON-BINARY DIAGNOSTIC PROTOCOL</span>
         </div>
-        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight font-mono">
-          <span className="text-cyan-400">Truth</span>
-          <span className="text-white">DNA</span>
-        </h1>
-        <p className="text-slate-300 text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
-          Multi-layered forensic media analysis delivering{" "}
-          <span className="inline-flex items-center px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-semibold">
-            Non-Binary Diagnostics
-          </span>{" "}
-          across Evidence, Confidence & Uncertainty.
+
+        <div className="flex items-center justify-center gap-3">
+          <div
+            className="inline-flex items-center justify-center w-12 h-12 rounded-xl"
+            style={{
+              background: "rgba(0, 212, 255, 0.1)",
+              border: "1px solid rgba(0, 212, 255, 0.3)",
+            }}
+          >
+            <Dna className="w-6 h-6 text-cyan-400" />
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight font-mono text-white">
+            <span className="text-cyan-400">Truth</span>DNA
+          </h1>
+        </div>
+
+        <p className="text-slate-300 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
+          Multi-layered forensic media analysis evaluating Evidence, Confidence Calibration, and Explicit Uncertainty without binary verdict forcing.
         </p>
       </div>
 
