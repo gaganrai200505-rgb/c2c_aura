@@ -102,6 +102,26 @@ def health_check(request):
     }
 
 
+@api.get("/api/setup-admin", tags=["System"])
+def setup_admin_credentials(request):
+    """One-click admin superuser provisioner."""
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    user, created = User.objects.get_or_create(username="admin", defaults={"email": "admin@truthdna.local"})
+    user.set_password("adminpassword")
+    user.is_staff = True
+    user.is_superuser = True
+    user.save()
+    return {
+        "status": "success",
+        "message": "Superuser active and ready",
+        "username": "admin",
+        "password": "adminpassword",
+        "action": "created" if created else "password_reset",
+        "login_url": "/admin/",
+    }
+
+
 # ─── 1. Media Forensics Analysis Endpoint ────────────────────────────────────
 
 @api.post(
