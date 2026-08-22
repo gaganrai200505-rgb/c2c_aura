@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+python-multipart
+python-dotenv
+imagehash
+Pillow
+transformers
+qdrant-client
+google-genai
+duckduckgo-search
+opencv-python-headless
+numpy
