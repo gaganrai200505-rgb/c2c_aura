@@ -1,7 +1,25 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { UploadCloud, Dna, AlertTriangle, Copy, Check, Shield, Activity, Search, Zap } from "lucide-react";
+import {
+  UploadCloud,
+  Dna,
+  AlertTriangle,
+  Copy,
+  Check,
+  Shield,
+  Activity,
+  Search,
+  Zap,
+  Lock,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  RotateCcw,
+  ExternalLink,
+  Clock,
+  Fingerprint,
+} from "lucide-react";
 import type { AnalysisState, ForensicSignal, MediaDNAReport } from "@/types/truthdna";
 
 const API_URL = "http://localhost:8000/api/analyze";
@@ -10,6 +28,12 @@ const API_URL = "http://localhost:8000/api/analyze";
 
 function cn(...classes: (string | undefined | false | null)[]): string {
   return classes.filter(Boolean).join(" ");
+}
+
+function formatMetricLabel(key: string): string {
+  return key
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 // ─── Status pill ─────────────────────────────────────────────────────────────
@@ -22,13 +46,17 @@ function StatusPill({ status }: { status: ForensicSignal["status"] }) {
       ? "pill-suspicious"
       : "pill-altered";
   const dot =
-    status === "Clean" ? "bg-emerald-400" : status === "Suspicious" ? "bg-amber-400" : "bg-red-400";
+    status === "Clean"
+      ? "bg-emerald-400"
+      : status === "Suspicious"
+      ? "bg-amber-400"
+      : "bg-red-400";
 
   return (
     <span
       className={cn(
         cls,
-        "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide"
+        "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-mono font-medium tracking-wide"
       )}
     >
       <span className={cn(dot, "w-1.5 h-1.5 rounded-full")} />
@@ -40,29 +68,28 @@ function StatusPill({ status }: { status: ForensicSignal["status"] }) {
 // ─── Confidence dial ──────────────────────────────────────────────────────────
 
 function ConfidenceDial({ label, value }: { label: string; value: number }) {
-  const radius = 36;
+  const radius = 32;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - value * circumference;
+  const clamped = Math.max(0, Math.min(1, value));
+  const offset = circumference - clamped * circumference;
 
   const color =
-    value >= 0.7
+    clamped >= 0.7
       ? "#10b981"
-      : value >= 0.4
+      : clamped >= 0.4
       ? "#f59e0b"
       : "#ef4444";
 
-  const formattedLabel = label
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  const formattedLabel = formatMetricLabel(label);
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="relative w-24 h-24">
-        <svg viewBox="0 0 96 96" className="w-full h-full -rotate-90">
-          <circle cx="48" cy="48" r={radius} className="dial-track" />
+    <div className="flex flex-col items-center gap-2 p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 min-w-[120px]">
+      <div className="relative w-20 h-20 flex items-center justify-center">
+        <svg viewBox="0 0 80 80" className="w-full h-full -rotate-90">
+          <circle cx="40" cy="40" r={radius} className="dial-track" />
           <circle
-            cx="48"
-            cy="48"
+            cx="40"
+            cy="40"
             r={radius}
             className="dial-fill"
             stroke={color}
@@ -71,12 +98,12 @@ function ConfidenceDial({ label, value }: { label: string; value: number }) {
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-lg font-bold" style={{ color }}>
-            {Math.round(value * 100)}
+          <span className="text-sm font-mono font-bold" style={{ color }}>
+            {Math.round(clamped * 100)}%
           </span>
         </div>
       </div>
-      <span className="text-xs text-center text-slate-400 leading-tight max-w-[80px]">
+      <span className="text-xs text-center font-medium text-slate-200 line-clamp-1 max-w-[110px]">
         {formattedLabel}
       </span>
     </div>
@@ -85,62 +112,60 @@ function ConfidenceDial({ label, value }: { label: string; value: number }) {
 
 // ─── Loading state ────────────────────────────────────────────────────────────
 
-function LoadingSequencer() {
+function LoadingSequencer({ fileName }: { fileName?: string }) {
   const steps = [
     { icon: Activity, label: "Running ELA micro-forensics..." },
-    { icon: Dna, label: "Extracting digital genome..." },
-    { icon: Search, label: "Scanning vector ledger..." },
+    { icon: Dna, label: "Extracting digital genome & pHash..." },
+    { icon: Search, label: "Searching Qdrant vector ledger..." },
     { icon: Zap, label: "Synthesizing with Gemini 2.5 Flash..." },
   ];
 
   return (
-    <div className="flex flex-col items-center gap-8 py-16">
+    <div className="flex flex-col items-center gap-8 py-16 w-full max-w-md mx-auto">
       {/* Spinning DNA ring */}
-      <div className="relative w-28 h-28">
+      <div className="relative w-24 h-24">
         <div
-          className="absolute inset-0 rounded-full border-2 border-transparent"
-          style={{
-            borderTopColor: "#00d4ff",
-            borderRightColor: "#7c3aed",
-            animation: "dna-spin 1.4s linear infinite",
-          }}
+          className="absolute inset-0 rounded-full border-2 border-transparent border-t-cyan-400 border-r-purple-500 animate-spin"
+          style={{ animationDuration: "1.4s" }}
         />
         <div
-          className="absolute inset-3 rounded-full border-2 border-transparent"
-          style={{
-            borderBottomColor: "#00d4ff",
-            borderLeftColor: "#7c3aed",
-            animation: "dna-spin 1s linear infinite reverse",
-          }}
+          className="absolute inset-2 rounded-full border-2 border-transparent border-b-cyan-400 border-l-purple-500 animate-spin"
+          style={{ animationDuration: "1s", animationDirection: "reverse" }}
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          <Dna className="w-8 h-8 text-cyan-400" />
+          <Dna className="w-7 h-7 text-cyan-400" />
         </div>
       </div>
 
-      <div className="text-center">
-        <h2 className="text-2xl font-bold glow-text text-cyan-400 mb-2">
+      <div className="text-center space-y-1">
+        <h2 className="text-2xl font-bold text-white tracking-tight font-mono">
           Sequencing Media DNA
         </h2>
-        <p className="text-slate-400 text-sm">
+        {fileName && (
+          <p className="text-xs font-mono text-cyan-400 bg-slate-900 px-3 py-1 rounded-md border border-slate-800 inline-block">
+            {fileName}
+          </p>
+        )}
+        <p className="text-slate-400 text-xs pt-1">
           Running multi-dimensional forensic analysis...
         </p>
       </div>
 
       {/* Step indicators */}
-      <div className="flex flex-col gap-3 w-full max-w-sm">
+      <div className="flex flex-col gap-3 w-full">
         {steps.map(({ icon: Icon, label }, i) => (
           <div
             key={i}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl glass animate-fade-in-up"
-            style={{ animationDelay: `${i * 0.3}s`, animationFillMode: "both", opacity: 0 }}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl glass"
           >
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: "rgba(0,212,255,0.1)" }}>
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: "rgba(0,212,255,0.1)" }}
+            >
               <Icon className="w-4 h-4 text-cyan-400" />
             </div>
-            <span className="text-sm text-slate-300">{label}</span>
-            <div className="ml-auto w-4 h-4 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+            <span className="text-xs font-mono text-slate-300">{label}</span>
+            <div className="ml-auto w-4 h-4 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin shrink-0" />
           </div>
         ))}
       </div>
@@ -151,49 +176,96 @@ function LoadingSequencer() {
 // ─── Evidence matrix ──────────────────────────────────────────────────────────
 
 function EvidenceMatrix({ signals }: { signals: ForensicSignal[] }) {
+  const [filter, setFilter] = useState<string>("ALL");
+
+  const filtered =
+    filter === "ALL"
+      ? signals
+      : signals.filter((s) => s.status === filter);
+
   return (
-    <div
-      className="glass p-6 animate-fade-in-up"
-      style={{ animationDelay: "0.1s", animationFillMode: "both", opacity: 0 }}
-    >
-      <div className="flex items-center gap-2 mb-5">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ background: "rgba(0,212,255,0.15)" }}>
-          <Shield className="w-4 h-4 text-cyan-400" />
+    <div className="glass p-6 space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+            style={{ background: "rgba(0,212,255,0.15)" }}
+          >
+            <Shield className="w-4 h-4 text-cyan-400" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
+              Pillar 1: Evidence Matrix
+            </h3>
+            <p className="text-xs text-slate-400">
+              {signals.length} signal{signals.length !== 1 ? "s" : ""} evaluated
+            </p>
+          </div>
         </div>
-        <h3 className="text-base font-semibold text-slate-200">Evidence Matrix</h3>
-        <span className="ml-auto text-xs text-slate-500">{signals.length} signal{signals.length !== 1 ? "s" : ""}</span>
+
+        {/* Filters */}
+        <div className="flex items-center gap-1.5 self-start sm:self-auto">
+          {["ALL", "Altered", "Suspicious", "Clean"].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={cn(
+                "px-2.5 py-1 rounded text-xs font-mono transition-colors",
+                filter === f
+                  ? "bg-slate-800 text-white font-semibold border border-slate-700"
+                  : "text-slate-400 hover:text-slate-200"
+              )}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">
-        {signals.map((sig, i) => (
-          <div
-            key={i}
-            className="rounded-xl p-4 transition-all hover:scale-[1.01]"
-            style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}
-          >
-            <div className="flex items-start justify-between gap-3 mb-2">
-              <span className="text-sm font-medium text-slate-200">{sig.dimension}</span>
-              <StatusPill status={sig.status} />
+        {filtered.length === 0 ? (
+          <p className="text-xs text-slate-500 font-mono py-4 text-center">
+            No signals match the selected filter.
+          </p>
+        ) : (
+          filtered.map((sig, i) => (
+            <div
+              key={i}
+              className="rounded-xl p-4 bg-slate-900/40 border border-slate-800/80 hover:border-slate-700 transition-all space-y-2"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-xs font-bold text-slate-200 font-mono tracking-wide">
+                  {sig.dimension}
+                </span>
+                <StatusPill status={sig.status} />
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {sig.finding}
+              </p>
+              {(sig.media_timestamp || sig.source_url) && (
+                <div className="flex flex-wrap items-center gap-3 pt-1 text-xs font-mono text-slate-400">
+                  {sig.media_timestamp && (
+                    <span className="inline-flex items-center gap-1 text-cyan-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                      <Clock className="w-3 h-3 text-cyan-500" />
+                      @ {sig.media_timestamp}
+                    </span>
+                  )}
+                  {sig.source_url && (
+                    <a
+                      href={sig.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-cyan-400 hover:underline truncate max-w-sm"
+                    >
+                      <ExternalLink className="w-3 h-3 text-cyan-500 shrink-0" />
+                      <span className="truncate">{sig.source_url}</span>
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
-            <p className="text-xs text-slate-400 leading-relaxed">{sig.finding}</p>
-            {sig.media_timestamp && (
-              <span className="mt-2 inline-block text-xs text-cyan-600 font-mono">
-                @ {sig.media_timestamp}
-              </span>
-            )}
-            {sig.source_url && (
-              <a
-                href={sig.source_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-1 block text-xs text-cyan-500 hover:underline truncate"
-              >
-                {sig.source_url}
-              </a>
-            )}
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
@@ -204,27 +276,32 @@ function EvidenceMatrix({ signals }: { signals: ForensicSignal[] }) {
 function ConfidenceDials({ breakdown }: { breakdown: Record<string, number> }) {
   const entries = Object.entries(breakdown);
   return (
-    <div
-      className="glass p-6 animate-fade-in-up"
-      style={{ animationDelay: "0.2s", animationFillMode: "both", opacity: 0 }}
-    >
-      <div className="flex items-center gap-2 mb-5">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ background: "rgba(124,58,237,0.15)" }}>
+    <div className="glass p-6 space-y-5">
+      <div className="flex items-center gap-2.5 pb-4 border-b border-slate-800">
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+          style={{ background: "rgba(124,58,237,0.15)" }}
+        >
           <Activity className="w-4 h-4 text-violet-400" />
         </div>
-        <h3 className="text-base font-semibold text-slate-200">Confidence Breakdown</h3>
+        <div>
+          <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider">
+            Pillar 2: Confidence Calibration
+          </h3>
+          <p className="text-xs text-slate-400">
+            {entries.length} dimensional confidence metrics
+          </p>
+        </div>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {entries.map(([key, val]) => (
-          <ConfidenceDial key={key} label={key} value={Math.max(0, Math.min(1, val))} />
+          <ConfidenceDial key={key} label={key} value={val} />
         ))}
       </div>
 
-      <p className="mt-4 text-xs text-slate-500 text-center leading-relaxed">
-        Scores are multi-dimensional estimates, not a single verdict.
-        Individual confidence values do not confirm or deny manipulation.
+      <p className="text-xs font-mono text-slate-500 text-center pt-2 leading-relaxed">
+        Scores represent vector probability calibrations and do not force a single binary label.
       </p>
     </div>
   );
@@ -234,25 +311,19 @@ function ConfidenceDials({ breakdown }: { breakdown: Record<string, number> }) {
 
 function UncertaintyBox({ uncertainties }: { uncertainties: string[] }) {
   return (
-    <div
-      className="rounded-2xl p-6 animate-fade-in-up"
-      style={{
-        animationDelay: "0.3s",
-        animationFillMode: "both",
-        opacity: 0,
-        background: "rgba(245,158,11,0.06)",
-        border: "1px solid rgba(245,158,11,0.25)",
-      }}
-    >
-      <div className="flex items-center gap-2 mb-4">
-        <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
-        <h3 className="text-base font-semibold text-amber-300">Known Unknowns & Blind Spots</h3>
+    <div className="rounded-2xl p-6 bg-amber-950/20 border border-amber-900/40 space-y-4">
+      <div className="flex items-center gap-2.5 pb-3 border-b border-amber-900/30">
+        <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+        <h3 className="text-sm font-bold text-amber-300 font-mono uppercase tracking-wider">
+          Pillar 3: Explicit Uncertainties & Blind Spots
+        </h3>
       </div>
+
       <ul className="flex flex-col gap-2.5">
         {uncertainties.map((u, i) => (
           <li key={i} className="flex items-start gap-2.5">
-            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
-            <span className="text-xs text-amber-200/80 leading-relaxed">{u}</span>
+            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+            <span className="text-xs font-mono text-amber-200/90 leading-relaxed">{u}</span>
           </li>
         ))}
       </ul>
@@ -268,21 +339,30 @@ function WeightingRationale({ rationale }: { rationale: string }) {
   const display = expanded || !isLong ? rationale : rationale.slice(0, 300) + "...";
 
   return (
-    <div
-      className="glass p-6 animate-fade-in-up"
-      style={{ animationDelay: "0.35s", animationFillMode: "both", opacity: 0 }}
-    >
-      <div className="flex items-center gap-2 mb-3">
+    <div className="glass p-6 space-y-3">
+      <div className="flex items-center gap-2">
         <Dna className="w-4 h-4 text-cyan-400" />
-        <h3 className="text-sm font-semibold text-slate-300">AI Chain-of-Thought Rationale</h3>
+        <h3 className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider">
+          Forensic Chain-of-Thought Rationale
+        </h3>
       </div>
-      <p className="text-xs text-slate-400 leading-relaxed">{display}</p>
+      <p className="text-xs font-mono text-slate-300 leading-relaxed whitespace-pre-wrap bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+        {display}
+      </p>
       {isLong && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="mt-2 text-xs text-cyan-500 hover:text-cyan-300 transition-colors"
+          className="text-xs font-mono text-cyan-400 hover:underline flex items-center gap-1"
         >
-          {expanded ? "Show less" : "Read more"}
+          {expanded ? (
+            <>
+              Show less <ChevronUp className="w-3.5 h-3.5" />
+            </>
+          ) : (
+            <>
+              Read full rationale <ChevronDown className="w-3.5 h-3.5" />
+            </>
+          )}
         </button>
       )}
     </div>
@@ -300,7 +380,6 @@ function ActionTray({ card, onReset }: { card: string; onReset: () => void }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {
-      // Fallback
       const el = document.createElement("textarea");
       el.value = card;
       document.body.appendChild(el);
@@ -312,20 +391,31 @@ function ActionTray({ card, onReset }: { card: string; onReset: () => void }) {
     }
   };
 
+  const handleDownload = () => {
+    const blob = new Blob([card], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `TruthDNA-Report-${new Date().toISOString().slice(0, 10)}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <div
-      className="glass p-5 animate-fade-in-up"
-      style={{ animationDelay: "0.45s", animationFillMode: "both", opacity: 0 }}
-    >
-      <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-        <span className="text-cyan-400 font-semibold">Shareable Context Card: </span>
+    <div className="glass p-6 space-y-4">
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">
+          Shareable Context Card:
+        </span>
+      </div>
+      <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 font-mono text-xs text-slate-300 leading-relaxed select-all">
         {card}
-      </p>
-      <div className="flex gap-3 flex-wrap">
+      </div>
+      <div className="flex gap-3 flex-wrap pt-2">
         <button
           id="copy-context-card"
           onClick={handleCopy}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all"
           style={{
             background: copied ? "rgba(16,185,129,0.15)" : "rgba(0,212,255,0.1)",
             border: `1px solid ${copied ? "rgba(16,185,129,0.4)" : "rgba(0,212,255,0.3)"}`,
@@ -335,18 +425,27 @@ function ActionTray({ card, onReset }: { card: string; onReset: () => void }) {
           {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
           {copied ? "Copied!" : "Copy Context Card"}
         </button>
+
+        <button
+          onClick={handleDownload}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-semibold text-slate-200 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-all"
+        >
+          <Download className="w-4 h-4" />
+          Download Markdown
+        </button>
+
         <button
           id="analyze-another"
           onClick={onReset}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all ml-auto"
           style={{
             background: "rgba(124,58,237,0.1)",
             border: "1px solid rgba(124,58,237,0.3)",
             color: "#a78bfa",
           }}
         >
-          <Dna className="w-4 h-4" />
-          Analyze Another
+          <RotateCcw className="w-4 h-4" />
+          Analyze Another File
         </button>
       </div>
     </div>
@@ -355,23 +454,35 @@ function ActionTray({ card, onReset }: { card: string; onReset: () => void }) {
 
 // ─── Diagnostic view (3 pillars) ─────────────────────────────────────────────
 
-function DiagnosticView({ report, onReset }: { report: MediaDNAReport; onReset: () => void }) {
+function DiagnosticView({
+  report,
+  fileName,
+  onReset,
+}: {
+  report: MediaDNAReport;
+  fileName?: string;
+  onReset: () => void;
+}) {
   const alteredCount = report.forensic_evidence.filter((s) => s.status === "Altered").length;
   const suspiciousCount = report.forensic_evidence.filter((s) => s.status === "Suspicious").length;
 
   return (
-    <div className="w-full max-w-3xl mx-auto flex flex-col gap-6">
+    <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 py-6">
       {/* Summary bar */}
-      <div
-        className="glass p-5 flex items-center gap-4 animate-fade-in-up"
-        style={{ animationFillMode: "both", opacity: 0 }}
-      >
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-1">
+      <div className="glass p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
             <Dna className="w-5 h-5 text-cyan-400" />
-            <span className="text-base font-bold text-white">Forensic Analysis Complete</span>
+            <span className="text-base font-bold text-white font-mono">
+              Forensic Analysis Complete
+            </span>
+            {fileName && (
+              <span className="text-xs font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                {fileName}
+              </span>
+            )}
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-400 font-mono">
             {report.forensic_evidence.length} signals analysed ·{" "}
             <span className="text-red-400">{alteredCount} Altered</span> ·{" "}
             <span className="text-amber-400">{suspiciousCount} Suspicious</span>
@@ -380,16 +491,13 @@ function DiagnosticView({ report, onReset }: { report: MediaDNAReport; onReset: 
             )}
           </p>
         </div>
-        <div
-          className="px-3 py-1.5 rounded-lg text-xs font-semibold"
-          style={{
-            background: "rgba(0,212,255,0.1)",
-            border: "1px solid rgba(0,212,255,0.2)",
-            color: "#00d4ff",
-          }}
-        >
-          No Binary Verdict
-        </div>
+
+        {report.digital_genome?.visual_phash && (
+          <div className="flex items-center gap-2 text-xs font-mono text-slate-300 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+            <Fingerprint className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span className="truncate max-w-[140px]">{report.digital_genome.visual_phash}</span>
+          </div>
+        )}
       </div>
 
       {/* Pillar 1 — Evidence Matrix */}
@@ -427,31 +535,40 @@ function HeroDropzone({ onFile }: { onFile: (file: File) => void }) {
       e.preventDefault();
       setDragging(false);
       const file = e.dataTransfer.files?.[0];
-      if (file) onFile(file);
+      if (file) {
+        onFile(file);
+      }
     },
     [onFile]
   );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) onFile(file);
+    if (file) {
+      onFile(file);
+    }
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full max-w-3xl mx-auto py-8">
       {/* Logo / Hero */}
-      <div className="text-center mb-12">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-6 animate-float"
-          style={{ background: "linear-gradient(135deg, rgba(0,212,255,0.2), rgba(124,58,237,0.2))", border: "1px solid rgba(0,212,255,0.3)" }}>
-          <Dna className="w-10 h-10 text-cyan-400" />
+      <div className="text-center mb-10 space-y-3">
+        <div
+          className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-2"
+          style={{
+            background: "linear-gradient(135deg, rgba(0,212,255,0.15), rgba(124,58,237,0.15))",
+            border: "1px solid rgba(0,212,255,0.3)",
+          }}
+        >
+          <Dna className="w-8 h-8 text-cyan-400" />
         </div>
-        <h1 className="text-5xl font-black tracking-tight mb-3">
-          <span className="glow-text text-cyan-400">Truth</span>
+        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight font-mono">
+          <span className="text-cyan-400">Truth</span>
           <span className="text-white">DNA</span>
         </h1>
-        <p className="text-slate-400 text-base max-w-sm mx-auto leading-relaxed">
-          Forensic media analysis powered by AI. 
-          <span className="text-amber-400"> Never a binary verdict</span> — always Evidence, Confidence & Uncertainty.
+        <p className="text-slate-400 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+          Forensic media analysis protocol.
+          <span className="text-amber-400"> Non-binary diagnostic</span> articulating Evidence, Confidence & Uncertainty.
         </p>
       </div>
 
@@ -459,9 +576,8 @@ function HeroDropzone({ onFile }: { onFile: (file: File) => void }) {
       <div
         id="file-dropzone"
         className={cn(
-          "relative rounded-2xl p-12 text-center cursor-pointer transition-all duration-300",
-          "glass neon-border",
-          dragging && "dropzone-active"
+          "relative rounded-2xl p-10 sm:p-12 text-center cursor-pointer transition-all duration-300 glass",
+          dragging && "border-cyan-400 bg-cyan-950/20 scale-[1.01]"
         )}
         onDragEnter={handleDrag}
         onDragOver={handleDrag}
@@ -485,42 +601,41 @@ function HeroDropzone({ onFile }: { onFile: (file: File) => void }) {
 
         <div className="flex flex-col items-center gap-4">
           <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300"
+            className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300"
             style={{
               background: dragging ? "rgba(0,212,255,0.2)" : "rgba(0,212,255,0.08)",
               border: "1px solid rgba(0,212,255,0.2)",
-              transform: dragging ? "scale(1.1)" : "scale(1)",
             }}
           >
-            <UploadCloud className="w-8 h-8 text-cyan-400" />
+            <UploadCloud className="w-7 h-7 text-cyan-400" />
           </div>
 
           <div>
-            <p className="text-xl font-semibold text-white mb-1">
-              {dragging ? "Release to analyze" : "Drop media here"}
+            <p className="text-lg font-semibold text-white mb-1">
+              {dragging ? "Release file to begin forensic pipeline" : "Drop media file here"}
             </p>
-            <p className="text-sm text-slate-400">
-              or <span className="text-cyan-400 hover:underline">browse files</span>
+            <p className="text-xs text-slate-400">
+              or <span className="text-cyan-400 hover:underline">browse files from computer</span>
             </p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-2 mt-2">
+          <div className="flex flex-wrap justify-center gap-1.5 mt-1">
             {["JPEG", "PNG", "WebP", "GIF", "MP4", "WebM", "MOV"].map((f) => (
               <span
                 key={f}
-                className="px-2.5 py-0.5 rounded-full text-xs font-mono"
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  color: "#64748b",
-                }}
+                className="px-2 py-0.5 rounded text-xs font-mono bg-slate-900 border border-slate-800 text-slate-400"
               >
                 {f}
               </span>
             ))}
           </div>
 
-          <p className="text-xs text-slate-600 mt-1">Max 20MB · Images & Videos</p>
+          <p className="text-xs text-slate-500 font-mono mt-1">Max 20MB · Images & Videos</p>
+
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-mono pt-2">
+            <Lock className="w-3.5 h-3.5" />
+            <span>Processed securely in memory</span>
+          </div>
         </div>
       </div>
 
@@ -534,7 +649,7 @@ function HeroDropzone({ onFile }: { onFile: (file: File) => void }) {
         ].map(({ icon: Icon, label, color }) => (
           <div
             key={label}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono font-medium"
             style={{
               background: `${color}10`,
               border: `1px solid ${color}30`,
@@ -554,8 +669,10 @@ function HeroDropzone({ onFile }: { onFile: (file: File) => void }) {
 
 export default function Home() {
   const [state, setState] = useState<AnalysisState>({ phase: "idle" });
+  const [activeFileName, setActiveFileName] = useState<string | undefined>();
 
   const handleFile = useCallback(async (file: File) => {
+    setActiveFileName(file.name);
     setState({ phase: "uploading" });
 
     const formData = new FormData();
@@ -583,61 +700,71 @@ export default function Home() {
     } catch (err: unknown) {
       setState({
         phase: "error",
-        message: err instanceof Error ? err.message : "Unknown error",
+        message: err instanceof Error ? err.message : "Unknown forensic analysis error",
       });
     }
   }, []);
 
-  const reset = useCallback(() => setState({ phase: "idle" }), []);
+  const reset = useCallback(() => {
+    setState({ phase: "idle" });
+    setActiveFileName(undefined);
+  }, []);
 
   return (
-    <main className="min-h-screen gradient-bg flex flex-col">
-      {/* Background grid */}
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
-
+    <main className="min-h-screen flex flex-col justify-between bg-slate-950 text-slate-100">
       {/* Nav bar */}
-      <nav className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-slate-800/60">
-        <div className="flex items-center gap-2">
+      <nav className="flex items-center justify-between px-6 py-4 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="flex items-center gap-2.5">
           <Dna className="w-5 h-5 text-cyan-400" />
-          <span className="text-sm font-bold text-white tracking-wide">TruthDNA</span>
-          <span className="px-2 py-0.5 rounded text-xs font-mono"
-            style={{ background: "rgba(0,212,255,0.1)", color: "#00d4ff", border: "1px solid rgba(0,212,255,0.2)" }}>
+          <span className="text-sm font-bold text-white tracking-wide font-mono">TruthDNA</span>
+          <span
+            className="px-2 py-0.5 rounded text-xs font-mono"
+            style={{
+              background: "rgba(0,212,255,0.1)",
+              color: "#00d4ff",
+              border: "1px solid rgba(0,212,255,0.2)",
+            }}
+          >
             v0.1
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs text-slate-400">3-Pillar Diagnostic</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1 rounded bg-slate-900 border border-slate-800 text-xs font-mono text-slate-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>3-Pillar Protocol</span>
+          </div>
         </div>
       </nav>
 
       {/* Main content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-12">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
         {state.phase === "idle" && <HeroDropzone onFile={handleFile} />}
 
         {(state.phase === "uploading" || state.phase === "analyzing") && (
-          <LoadingSequencer />
+          <LoadingSequencer fileName={activeFileName} />
         )}
 
         {state.phase === "error" && (
           <div className="w-full max-w-lg mx-auto text-center">
-            <div className="glass rounded-2xl p-8"
-              style={{ border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.05)" }}>
-              <AlertTriangle className="w-10 h-10 text-red-400 mx-auto mb-4" />
-              <h2 className="text-lg font-bold text-white mb-2">Analysis Failed</h2>
-              <p className="text-sm text-slate-400 mb-6 leading-relaxed">{state.message}</p>
+            <div
+              className="glass rounded-2xl p-8 space-y-4"
+              style={{
+                border: "1px solid rgba(239,68,68,0.3)",
+                background: "rgba(239,68,68,0.05)",
+              }}
+            >
+              <AlertTriangle className="w-10 h-10 text-red-400 mx-auto" />
+              <h2 className="text-lg font-bold text-white font-mono">Analysis Failed</h2>
+              <p className="text-xs text-slate-400 font-mono leading-relaxed">{state.message}</p>
               <button
                 id="retry-button"
                 onClick={reset}
-                className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-105"
-                style={{ background: "rgba(0,212,255,0.1)", border: "1px solid rgba(0,212,255,0.3)", color: "#00d4ff" }}
+                className="px-5 py-2 rounded-xl text-xs font-mono font-semibold transition-all hover:scale-105"
+                style={{
+                  background: "rgba(0,212,255,0.1)",
+                  border: "1px solid rgba(0,212,255,0.3)",
+                  color: "#00d4ff",
+                }}
               >
                 Try Again
               </button>
@@ -646,15 +773,13 @@ export default function Home() {
         )}
 
         {state.phase === "complete" && (
-          <DiagnosticView report={state.report} onReset={reset} />
+          <DiagnosticView report={state.report} fileName={activeFileName} onReset={reset} />
         )}
       </div>
 
       {/* Footer */}
-      <footer className="relative z-10 py-4 border-t border-slate-800/60 text-center">
-        <p className="text-xs text-slate-600">
-          TruthDNA enforces a non-binary diagnostic. No output constitutes a definitive verdict.
-        </p>
+      <footer className="py-6 border-t border-slate-800/80 text-center font-mono text-xs text-slate-500">
+        <p>TruthDNA enforces a non-binary diagnostic methodology. No output constitutes a definitive verdict.</p>
       </footer>
     </main>
   );
