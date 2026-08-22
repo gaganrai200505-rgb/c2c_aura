@@ -3,14 +3,13 @@
 import React, { useState, useCallback, useRef } from "react";
 import {
   Upload,
-  FileSearch,
-  Sliders,
-  AlertCircle,
   FolderOpen,
+  Shield,
+  Layers,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SUPPORTED_EXTENSIONS } from "@/lib/constants";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
 interface FileDropzoneProps {
@@ -60,14 +59,18 @@ export function FileDropzone({ onFileSelect, disabled = false }: FileDropzonePro
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
+    <div className="w-full max-w-2xl mx-auto flex flex-col items-center">
       {/* Editorial Header */}
       <div className="text-center mb-8">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-500/20 bg-blue-950/30 text-xs font-mono text-blue-300 mb-4">
+          <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+          <span>Multi-Modal Forensic Intelligence</span>
+        </div>
         <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-3 font-mono">
           Forensic Media Verification
         </h1>
-        <p className="text-sm sm:text-base text-slate-400 max-w-lg mx-auto leading-relaxed">
-          Multi-dimensional media analysis delivering calibrated evidence, confidence metrics, and explicit uncertainties without binary oversimplifications.
+        <p className="text-sm sm:text-base text-slate-400 max-w-md mx-auto leading-relaxed">
+          Upload images or videos for comprehensive tamper analysis, error-level forensics, and provenance diagnostics.
         </p>
       </div>
 
@@ -84,10 +87,10 @@ export function FileDropzone({ onFileSelect, disabled = false }: FileDropzonePro
         onClick={handleTriggerClick}
         onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleTriggerClick()}
         className={cn(
-          "w-full rounded-2xl border-2 border-dashed p-10 sm:p-14 text-center cursor-pointer transition-all duration-200 select-none flex flex-col items-center justify-center gap-5 bg-slate-900/60",
+          "w-full rounded-2xl border-2 border-dashed p-10 sm:p-14 text-center cursor-pointer transition-all duration-200 select-none flex flex-col items-center justify-center gap-5 bg-slate-900/60 shadow-lg shadow-black/30",
           isDragging
-            ? "border-blue-500 bg-blue-950/20 scale-[1.005]"
-            : "border-slate-700 hover:border-slate-500 hover:bg-slate-900/80",
+            ? "border-blue-500 bg-blue-950/30 scale-[1.01]"
+            : "border-slate-700/80 hover:border-slate-500 hover:bg-slate-900/90",
           disabled && "opacity-50 cursor-not-allowed"
         )}
       >
@@ -102,16 +105,16 @@ export function FileDropzone({ onFileSelect, disabled = false }: FileDropzonePro
         />
 
         {/* Upload Icon */}
-        <div className="w-16 h-16 rounded-2xl bg-blue-600/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
+        <div className="w-16 h-16 rounded-2xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400 transition-transform group-hover:scale-105">
           <Upload className="w-7 h-7" />
         </div>
 
         <div className="space-y-1 text-center">
           <p className="text-base sm:text-lg font-semibold text-white">
-            {isDragging ? "Release file to begin forensic pipeline" : "Drag and drop media file here"}
+            {isDragging ? "Drop media file to begin analysis" : "Drag and drop media file here"}
           </p>
           <p className="text-xs sm:text-sm text-slate-400">
-            Supports both high-resolution images and video clips
+            or click anywhere to select from your computer
           </p>
         </div>
 
@@ -143,43 +146,20 @@ export function FileDropzone({ onFileSelect, disabled = false }: FileDropzonePro
         </div>
       </div>
 
-      {/* 3-Pillar Methodology Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mt-10">
-        <Card variant="default" className="p-5">
-          <div className="flex items-center gap-2.5 mb-2 text-slate-200">
-            <FileSearch className="w-4 h-4 text-blue-400" />
-            <h3 className="text-xs font-mono font-bold uppercase tracking-wider">
-              Pillar 1: Evidence
-            </h3>
-          </div>
-          <p className="text-xs text-slate-400 leading-relaxed">
-            Error Level Analysis (ELA), visual tampering, voice consistency, and EXIF provenance checks.
-          </p>
-        </Card>
-
-        <Card variant="default" className="p-5">
-          <div className="flex items-center gap-2.5 mb-2 text-slate-200">
-            <Sliders className="w-4 h-4 text-blue-400" />
-            <h3 className="text-xs font-mono font-bold uppercase tracking-wider">
-              Pillar 2: Confidence
-            </h3>
-          </div>
-          <p className="text-xs text-slate-400 leading-relaxed">
-            Multi-dimensional probability distributions across visual, acoustic, and provenance vectors.
-          </p>
-        </Card>
-
-        <Card variant="default" className="p-5">
-          <div className="flex items-center gap-2.5 mb-2 text-slate-200">
-            <AlertCircle className="w-4 h-4 text-blue-400" />
-            <h3 className="text-xs font-mono font-bold uppercase tracking-wider">
-              Pillar 3: Uncertainty
-            </h3>
-          </div>
-          <p className="text-xs text-slate-400 leading-relaxed">
-            Explicit documentation of analytical blind spots, missing references, and compression limits.
-          </p>
-        </Card>
+      {/* Subtle Horizontal Capabilities Strip */}
+      <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-xs font-mono text-slate-400">
+        <div className="flex items-center gap-1.5">
+          <Shield className="w-3.5 h-3.5 text-blue-400" />
+          <span>Error Level Forensics</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Layers className="w-3.5 h-3.5 text-blue-400" />
+          <span>Digital Genome & pHash</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+          <span>Gemini 2.5 Flash Synthesis</span>
+        </div>
       </div>
     </div>
   );
