@@ -1,0 +1,176 @@
+/* globals.css — TruthDNA Design System
+   Dark forensic aesthetic with glowing accents
+*/
+
+@import "tailwindcss";
+
+@theme {
+  --color-dna-bg: #080b14;
+  --color-dna-surface: #0d1424;
+  --color-dna-border: #1a2540;
+  --color-dna-accent: #00d4ff;
+  --color-dna-accent2: #7c3aed;
+  --color-dna-clean: #10b981;
+  --color-dna-suspicious: #f59e0b;
+  --color-dna-altered: #ef4444;
+  --color-dna-text: #e2e8f0;
+  --color-dna-muted: #64748b;
+}
+
+:root {
+  --bg: #080b14;
+  --surface: #0d1424;
+  --border: #1a2540;
+  --accent: #00d4ff;
+  --accent2: #7c3aed;
+  --clean: #10b981;
+  --suspicious: #f59e0b;
+  --altered: #ef4444;
+  --text: #e2e8f0;
+  --muted: #64748b;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ─────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ── Glass panel ───────────────────────────────── */
+.glass {
+  background: rgba(13, 20, 36, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+/* ── Glow text ─────────────────────────────────── */
+.glow-text {
+  text-shadow: 0 0 20px rgba(0, 212, 255, 0.6), 0 0 40px rgba(0, 212, 255, 0.3);
+}
+
+/* ── Neon border ───────────────────────────────── */
+.neon-border {
+  box-shadow:
+    0 0 0 1px rgba(0, 212, 255, 0.3),
+    0 0 20px rgba(0, 212, 255, 0.1),
+    inset 0 0 20px rgba(0, 212, 255, 0.03);
+}
+
+/* ── Animated gradient background ─────────────── */
+.gradient-bg {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 212, 255, 0.03) 0%,
+    rgba(124, 58, 237, 0.03) 50%,
+    rgba(0, 212, 255, 0.03) 100%
+  );
+}
+
+/* ── Scanning animation ────────────────────────── */
+@keyframes scan-line {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes dna-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.4); }
+  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 212, 255, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 212, 255, 0); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+
+/* ── Confidence dial ───────────────────────────── */
+.dial-track {
+  stroke: var(--border);
+  stroke-width: 8;
+  fill: none;
+}
+
+.dial-fill {
+  stroke-linecap: round;
+  fill: none;
+  stroke-width: 8;
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Status pill ───────────────────────────────── */
+.pill-clean {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+.pill-suspicious {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+}
+
+.pill-altered {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+/* ── Drop zone ─────────────────────────────────── */
+.dropzone-active {
+  border-color: var(--accent) !important;
+  background: rgba(0, 212, 255, 0.05) !important;
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.15);
+}
+
+/* ── Section stagger ───────────────────────────── */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
