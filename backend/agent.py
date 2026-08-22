@@ -213,6 +213,141 @@ INSTRUCTIONS:
     return prompt.strip()
 
 
+def build_claim_analysis_prompt(
+    claim_text: str,
+    search_results: Optional[List[Dict[str, Any]]] = None,
+    search_failed: bool = False,
+    search_notes: Optional[List[str]] = None,
+    media_context: Optional[str] = None,
+    fallback_notes: Optional[List[str]] = None,
+) -> str:
+    """
+    Assemble structured prompt for text claims, rumors, and social posts.
+    """
+    search_section = ""
+    if search_failed:
+        search_section = "FACT-CHECK GROUNDING: Failed to query external search registries."
+    elif search_results:
+        result_lines = "\n".join(
+            f"  [{i+1}] {r.get('title','N/A')} | {r.get('href','N/A')}\n       {r.get('body','')[:250]}"
+            for i, r in enumerate(search_results[:6])
+        )
+        search_section = f"FACT-CHECKING & SEARCH GROUNDING ({len(search_results)} sources):\n{result_lines}"
+    else:
+        search_section = "FACT-CHECK GROUNDING: Completed, no prior debunk or verified record found."
+
+    media_section = f"\nATTACHED MEDIA CONTEXT:\n  {media_context}" if media_context else ""
+
+    fallbacks = ""
+    all_fallbacks = (fallback_notes or []) + (search_notes or [])
+    if all_fallbacks:
+        fallback_lines = "\n".join(f"  ⚠ {n}" for n in all_fallbacks if n)
+        fallbacks = f"\nTRIGGERED FALLBACKS / SYSTEM NOTES:\n{fallback_lines}"
+
+    prompt = f"""
+FAKE INFORMATION & CLAIM VERIFICATION REQUEST
+══════════════════════════════════════════════════════════
+
+CLAIM / SOCIAL POST TEXT:
+  "{claim_text}"
+{media_section}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+SIGNAL — FACT-CHECK REGISTRIES & WEB EVIDENCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+{search_section}
+{fallbacks}
+
+══════════════════════════════════════════════════════════
+INSTRUCTIONS:
+  1. Synthesize the claim against all factual records above into a MediaDNAReport JSON.
+  2. Deliver a strictly NON-BINARY 3-Pillar diagnostic (Evidence, Confidence, Uncertainty).
+  3. Under confidence_breakdown include:
+     - factual_alignment      (coherence with established factual consensus)
+     - source_corroboration   (availability of credible reporting)
+     - context_integrity      (absence of out-of-context misattribution)
+     - consensus_reliability  (strength of reporting agreement)
+     - overall_diagnostic     (holistic confidence index)
+  4. In explicit_uncertainties list all unverified assumptions, developing news velocity, and lack of primary records.
+  5. DO NOT output 'True', 'False', 'Real', or 'Fake' as verdict terms.
+══════════════════════════════════════════════════════════
+"""
+    return prompt.strip()
+
+
+def build_link_analysis_prompt(
+    url: str,
+    article_data: Dict[str, Any],
+    search_results: Optional[List[Dict[str, Any]]] = None,
+    video_forensics_summary: Optional[str] = None,
+    fallback_notes: Optional[List[str]] = None,
+) -> str:
+    """
+    Assemble prompt for URL / Reel / Article analysis.
+    """
+    title = article_data.get("title", "N/A")
+    domain = article_data.get("domain", "N/A")
+    is_satire = article_data.get("is_satire", False)
+    body = article_data.get("body", "")[:1200]
+    description = article_data.get("description", "")
+    uploader = article_data.get("uploader", "")
+
+    satire_note = f"\n  ⚠ KNOWN SATIRE DOMAIN: {domain} is a registered parody/satire site." if is_satire else ""
+
+    video_sec = f"\nVIDEO STREAM FORENSICS:\n  {video_forensics_summary}" if video_forensics_summary else ""
+
+    search_section = ""
+    if search_results:
+        result_lines = "\n".join(
+            f"  [{i+1}] {r.get('title','N/A')} | {r.get('href','N/A')}\n       {r.get('body','')[:200]}"
+            for i, r in enumerate(search_results[:5])
+        )
+        search_section = f"FACT-CHECKING & SEARCH GROUNDING:\n{result_lines}"
+    else:
+        search_section = "FACT-CHECK GROUNDING: No external debunk records found."
+
+    fallbacks = ""
+    if fallback_notes:
+        fallback_lines = "\n".join(f"  ⚠ {n}" for n in fallback_notes)
+        fallbacks = f"\nTRIGGERED FALLBACKS:\n{fallback_lines}"
+
+    prompt = f"""
+URL & MEDIA LINK VERIFICATION REQUEST
+══════════════════════════════════════════════════════════
+
+LINK METADATA:
+  URL         : {url}
+  Domain      : {domain}{satire_note}
+  Title/Header: {title}
+  Author/User : {uploader or 'Unknown'}
+  Description : {description}
+
+EXTRACTED BODY / CAPTION CONTEXT:
+  {body or 'No text body extracted'}
+{video_sec}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+SIGNAL — FACT-CHECK REGISTRIES & GROUNDING
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+{search_section}
+{fallbacks}
+
+══════════════════════════════════════════════════════════
+INSTRUCTIONS:
+  1. Evaluate the link and/or video stream against the 3 Non-Binary Pillars.
+  2. Under confidence_breakdown include:
+     - domain_reputation       (credibility and history of the publishing domain)
+     - factual_alignment       (alignment of article/post claims with verified records)
+     - headline_consistency    (whether the headline matches or exaggerates the body)
+     - visual_context_coherence(if video/reel present, whether visuals match caption)
+     - overall_diagnostic      (holistic confidence index)
+  3. Explicitly state any satiral origins or paywalled content in explicit_uncertainties.
+  4. DO NOT produce a binary TRUE/FALSE verdict.
+══════════════════════════════════════════════════════════
+"""
+    return prompt.strip()
+
+
 # ---------------------------------------------------------------------------
 # Gemini Synthesis Call
 # ---------------------------------------------------------------------------
@@ -252,18 +387,26 @@ def synthesize_report(
     ]
 
     def _call_gemini(turn_messages) -> str:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=turn_messages,
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
-                response_mime_type="application/json",
-                response_schema=MediaDNAReport,
-                temperature=0.2,   # Low temperature for factual forensic output
-                max_output_tokens=4096,
-            ),
-        )
-        return response.text
+        system_with_schema = f"{SYSTEM_PROMPT}\n\nStrict JSON Schema:\n{schema_json}"
+        models_to_try = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-2.5-flash-lite", "gemini-flash-latest"]
+        last_err = None
+        for m in models_to_try:
+            try:
+                response = client.models.generate_content(
+                    model=m,
+                    contents=turn_messages,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system_with_schema,
+                        response_mime_type="application/json",
+                        temperature=0.2,   # Low temperature for factual forensic output
+                        max_output_tokens=4096,
+                    ),
+                )
+                return response.text
+            except Exception as e:
+                last_err = e
+                logger.warning(f"Model {m} failed: {e}. Trying fallback model...")
+        raise last_err or RuntimeError("All Gemini models failed.")
 
     # ── Attempt 1 ────────────────────────────────────────────────────────────
     logger.info("Calling Gemini 2.5 Flash — Attempt 1...")

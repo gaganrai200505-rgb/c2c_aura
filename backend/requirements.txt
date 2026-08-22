@@ -15,3 +15,5 @@ numpy
 django
 django-ninja
 django-cors-headers
+yt-dlp
+beautifulsoup4

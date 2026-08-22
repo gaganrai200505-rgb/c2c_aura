@@ -103,14 +103,32 @@ The frontend will run at `http://localhost:5173`.
 | Method | URL | Description |
 |--------|-----|-------------|
 | `GET` | `http://localhost:8000/health` | Liveness check + ledger stats |
-| `POST` | `http://localhost:8000/api/analyze` | Upload media → `MediaDNAReport` |
+| `POST` | `http://localhost:8000/api/analyze` | Upload media (Image / Video) + optional claim → `MediaDNAReport` |
+| `POST` | `http://localhost:8000/api/analyze-link` | Analyze **Instagram Reels, Facebook Videos, YouTube Shorts, or News URLs** |
+| `POST` | `http://localhost:8000/api/analyze-claim` | Fact-check viral claims, quotes, rumors, or screenshot posts |
 | `GET` | `http://localhost:8000/admin/` | **Native Django Admin Panel** (User: `admin` / Pass: `adminpassword`) |
 | `GET` | `http://localhost:8000/api/docs` | Interactive Django Ninja OpenAPI / Swagger UI |
 
-### Upload Example (curl)
+### Example Usage (curl)
+
+#### 1. Analyze Social Reel or News Link (No manual download required)
+```bash
+curl -X POST http://localhost:8000/api/analyze-link \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.instagram.com/reel/example"}'
+```
+
+#### 2. Fact-Check a Viral Text Claim
+```bash
+curl -X POST http://localhost:8000/api/analyze-claim \
+  -F "claim=Pope Francis photographed wearing white designer puffer jacket in Paris"
+```
+
+#### 3. Forensic Media Upload
 ```bash
 curl -X POST http://localhost:8000/api/analyze \
-  -F "file=@/path/to/your/image.jpg"
+  -F "file=@/path/to/your/image.jpg" \
+  -F "claim=Claimed to be live footage of event"
 ```
 
 ---
@@ -118,17 +136,20 @@ curl -X POST http://localhost:8000/api/analyze \
 ## Architecture
 
 ```
+[Universal User Input: Reel URL / Image / Video / Claim]
+                    │
+                    ▼
 [Vite + React UI :5173]
-      │
-      │ POST /api/analyze (multipart, ≤20MB)
-      ▼
+                    │
+                    ▼
 [Django + Django Ninja :8000]
       │
-      ├─► forensics.py     → ELA score (0.0–1.0), frame extraction (15s cap)
-      ├─► dna_extractor.py → pHash + CLIP embedding (zero-vector fallback)
-      ├─► ledger.py        → Qdrant cosine search (hard-skip if invalid)
-      ├─► search.py        → DuckDuckGo grounding (safe fallback)
-      └─► agent.py         → Gemini 2.5 Flash synthesis
+      ├─► link_analyzer.py  → yt-dlp 15s video stream + OpenGraph scraper
+      ├─► forensics.py      → ELA score (0.0–1.0), frame extraction (15s cap)
+      ├─► dna_extractor.py  → pHash + CLIP embedding (zero-vector fallback)
+      ├─► ledger.py         → Qdrant cosine search for recycled footage
+      ├─► claim_verifier.py → Multi-query debunk search (Snopes, Reuters, AP)
+      └─► agent.py          → Gemini 3.6/3.7 Flash non-binary synthesis
                                    │
                                    │ MediaDNAReport (structured JSON)
                                    ▼
