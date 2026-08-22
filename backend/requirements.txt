@@ -1,5 +1,7 @@
 fastapi
 uvicorn
+gunicorn
+whitenoise
 pydantic
 pydantic-settings
 python-multipart
@@ -17,3 +19,5 @@ django-ninja
 django-cors-headers
 yt-dlp
 beautifulsoup4
+imageio-ffmpeg
+static-ffmpeg

@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  truthdna:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: truthdna_app
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-django-insecure-truthdna-production-key}
+    restart: unless-stopped

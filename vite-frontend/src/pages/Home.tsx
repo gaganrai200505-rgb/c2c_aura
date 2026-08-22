@@ -6,9 +6,10 @@ import {
 } from "lucide-react";
 import type { AnalysisState, ForensicSignal, MediaDNAReport } from "../types/truthdna";
 
-const API_ANALYZE_MEDIA = "http://localhost:8000/api/analyze";
-const API_ANALYZE_LINK  = "http://localhost:8000/api/analyze-link";
-const API_ANALYZE_CLAIM = "http://localhost:8000/api/analyze-claim";
+const BASE_API = (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(/\/$/, "");
+const API_ANALYZE_MEDIA = `${BASE_API}/api/analyze`;
+const API_ANALYZE_LINK  = `${BASE_API}/api/analyze-link`;
+const API_ANALYZE_CLAIM = `${BASE_API}/api/analyze-claim`;
 
 type AnalysisMode = "link" | "media" | "claim";
 

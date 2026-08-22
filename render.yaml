@@ -1,0 +1,41 @@
+services:
+  # ─── Django Ninja Backend Web Service ──────────────────────────────────────
+  - type: web
+    name: truthdna-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    region: oregon
+    buildCommand: "pip install -r requirements.txt && python manage.py makemigrations --noinput && python manage.py migrate --noinput && python manage.py collectstatic --noinput"
+    startCommand: "gunicorn truthdna_backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_SETTINGS_MODULE
+        value: truthdna_backend.settings
+      - key: ALLOWED_HOSTS
+        value: "*"
+
+  # ─── Vite React SPA Frontend Static Site ───────────────────────────────────
+  - type: web
+    name: truthdna-frontend
+    runtime: static
+    rootDir: vite-frontend
+    plan: free
+    region: oregon
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: truthdna-backend
+          property: host
