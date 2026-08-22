@@ -1,0 +1,9 @@
+{
+  "name": "truthdna-app",
+  "private": true,
+  "version": "0.2.0",
+  "scripts": {
+    "build": "cd vite-frontend && npm install && npm run build",
+    "preview": "cd vite-frontend && npm run preview"
+  }
+}
