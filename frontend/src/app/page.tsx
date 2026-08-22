@@ -566,9 +566,12 @@ function HeroDropzone({ onFile }: { onFile: (file: File) => void }) {
           <span className="text-cyan-400">Truth</span>
           <span className="text-white">DNA</span>
         </h1>
-        <p className="text-slate-400 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
-          Forensic media analysis protocol.
-          <span className="text-amber-400"> Non-binary diagnostic</span> articulating Evidence, Confidence & Uncertainty.
+        <p className="text-slate-300 text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
+          Multi-layered forensic media analysis delivering{" "}
+          <span className="inline-flex items-center px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-semibold">
+            Non-Binary Diagnostics
+          </span>{" "}
+          across Evidence, Confidence & Uncertainty.
         </p>
       </div>
 
@@ -615,7 +618,7 @@ function HeroDropzone({ onFile }: { onFile: (file: File) => void }) {
               {dragging ? "Release file to begin forensic pipeline" : "Drop media file here"}
             </p>
             <p className="text-xs text-slate-400">
-              or <span className="text-cyan-400 hover:underline">browse files from computer</span>
+              or <span className="text-cyan-400 hover:underline font-semibold">browse files from computer</span>
             </p>
           </div>
 
@@ -632,32 +635,30 @@ function HeroDropzone({ onFile }: { onFile: (file: File) => void }) {
 
           <p className="text-xs text-slate-500 font-mono mt-1">Max 20MB · Images & Videos</p>
 
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-mono pt-2">
-            <Lock className="w-3.5 h-3.5" />
-            <span>Processed securely in memory</span>
+          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-mono pt-2">
+            <Lock className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Processed securely in volatile memory</span>
           </div>
         </div>
       </div>
 
       {/* Feature pills */}
-      <div className="flex flex-wrap justify-center gap-3 mt-8">
+      <div className="flex flex-wrap justify-center gap-2.5 mt-8">
         {[
-          { icon: Shield, label: "ELA Forensics", color: "#10b981" },
-          { icon: Dna, label: "DNA Fingerprint", color: "#00d4ff" },
-          { icon: Search, label: "Lineage Search", color: "#a78bfa" },
-          { icon: Zap, label: "Gemini 2.5 Flash", color: "#f59e0b" },
-        ].map(({ icon: Icon, label, color }) => (
+          { icon: Shield, label: "ELA Forensics", tag: "Micro-Forensics" },
+          { icon: Dna, label: "DNA Fingerprint", tag: "Perceptual Hash" },
+          { icon: Search, label: "Lineage Search", tag: "Vector Ledger" },
+          { icon: Zap, label: "Gemini 2.5 Flash", tag: "LLM Engine" },
+        ].map(({ icon: Icon, label, tag }) => (
           <div
             key={label}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono font-medium"
-            style={{
-              background: `${color}10`,
-              border: `1px solid ${color}30`,
-              color,
-            }}
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-cyan-500/40 text-xs font-mono text-slate-200 transition-all shadow-xs group cursor-default"
           >
-            <Icon className="w-3.5 h-3.5" />
-            {label}
+            <Icon className="w-3.5 h-3.5 text-cyan-400 group-hover:text-cyan-300 shrink-0" />
+            <span>{label}</span>
+            <span className="text-[10px] text-slate-400 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">
+              {tag}
+            </span>
           </div>
         ))}
       </div>
