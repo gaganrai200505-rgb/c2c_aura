@@ -305,9 +305,21 @@ function HeroDropzone({ onFile }: { onFile: (f: File) => void }) {
           <span className="glow-text" style={{ color: "#00d4ff" }}>Truth</span>
           <span style={{ color: "#fff" }}>DNA</span>
         </h1>
-        <p style={{ color: "#64748b", fontSize: 15, maxWidth: 360, margin: "0 auto", lineHeight: 1.7 }}>
-          Forensic media analysis powered by AURA.AI.{" "}
-          <span style={{ color: "#f59e0b" }}>Never a binary verdict</span> — always Evidence, Confidence &amp; Uncertainty.
+        <p style={{ color: "#94a3b8", fontSize: 15, maxWidth: 520, margin: "0 auto", lineHeight: 1.6 }}>
+          Forensic media analysis powered by <strong style={{ color: "#00d4ff", fontWeight: 600 }}>AURA.AI</strong>.{" "}
+          <span style={{
+            display: "inline-block",
+            padding: "2px 8px",
+            borderRadius: 6,
+            background: "rgba(245, 158, 11, 0.12)",
+            border: "1px solid rgba(245, 158, 11, 0.3)",
+            color: "#fbbf24",
+            fontWeight: 600,
+            fontSize: 13,
+            fontFamily: "monospace"
+          }}>
+            Never a Binary Verdict
+          </span> — articulating Evidence, Confidence &amp; Uncertainty.
         </p>
       </div>
 
