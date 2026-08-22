@@ -1,6 +1,6 @@
 // layout.tsx — TruthDNA Root Layout
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -9,16 +9,23 @@ const inter = Inter({
   display: "swap",
 });
 
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "TruthDNA — Forensic Media Analysis",
+  title: "TruthDNA — Media Forensic Diagnostic",
   description:
-    "AI-powered forensic media analysis. Never returns binary verdicts — delivers Evidence, Confidence & Uncertainty diagnostics.",
-  keywords: ["media forensics", "deepfake detection", "image analysis", "forensic AI"],
-  openGraph: {
-    title: "TruthDNA — Forensic Media Analysis",
-    description: "3-pillar forensic diagnostic: Evidence · Confidence · Uncertainty",
-    type: "website",
-  },
+    "Forensic media analysis protocol delivering 3-pillar diagnostics: Evidence, Confidence Calibration, and Explicit Uncertainties.",
+  keywords: [
+    "media forensics",
+    "digital provenance",
+    "error level analysis",
+    "forensic verification",
+    "truthdna",
+  ],
 };
 
 export default function RootLayout({
@@ -27,8 +34,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="antialiased">{children}</body>
+    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} dark`}>
+      <body className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans antialiased selection:bg-zinc-800 selection:text-zinc-100">
+        {children}
+      </body>
     </html>
   );
 }
