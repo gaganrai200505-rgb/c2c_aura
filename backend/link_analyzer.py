@@ -55,12 +55,24 @@ def is_social_video_url(url: str) -> bool:
     return any(re.search(pat, clean_url, re.IGNORECASE) for pat in SOCIAL_VIDEO_PATTERNS)
 
 
+def _get_ffmpeg_path() -> Optional[str]:
+    """Find a usable ffmpeg executable from imageio_ffmpeg, static_ffmpeg, or PATH."""
+    try:
+        import imageio_ffmpeg  # noqa: PLC0415
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        pass
+    import shutil
+    return shutil.which("ffmpeg")
+
+
 def extract_social_video_and_metadata(
     url: str,
     max_duration_seconds: int = 15,
 ) -> Tuple[Optional[str], Dict[str, Any], bool, str]:
     """
     Download a brief segment (max 15s) of a social video/reel using yt-dlp.
+    If video stream download is blocked, automatically scrapes post metadata.
 
     Returns:
         (temp_video_path, metadata_dict, is_fallback, status_note)
@@ -68,29 +80,35 @@ def extract_social_video_and_metadata(
     try:
         import yt_dlp  # noqa: PLC0415
     except ImportError:
-        note = "FALLBACK: yt-dlp library not installed. Social video stream extraction unavailable."
-        logger.warning(note)
-        return None, {}, True, note
+        # Fallback to web scraping if yt-dlp is missing
+        content, fb, note = extract_article_content(url)
+        return None, content, True, f"FALLBACK: yt-dlp missing. {note}"
 
     temp_dir = tempfile.mkdtemp(prefix="truthdna_reel_")
     out_tmpl = os.path.join(temp_dir, "video.%(ext)s")
 
-    ydl_opts = {
+    ffmpeg_path = _get_ffmpeg_path()
+
+    ydl_opts: Dict[str, Any] = {
         "outtmpl": out_tmpl,
         "format": "best[ext=mp4]/best",
         "quiet": True,
         "no_warnings": True,
         "max_filesize": 25 * 1024 * 1024,  # Max 25 MB stream
         "socket_timeout": 12,
-        # Post-processor or download cap to prevent long downloads
         "download_ranges": lambda info_dict, ydl: [{"start_time": 0, "end_time": max_duration_seconds}],
     }
+
+    if ffmpeg_path:
+        ydl_opts["ffmpeg_location"] = ffmpeg_path
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             if not info:
-                return None, {}, True, "FALLBACK: Unable to extract video metadata from URL."
+                # Fallback to OpenGraph scraper
+                content, _, note = extract_article_content(url)
+                return None, content, True, f"FALLBACK: yt-dlp extracted no info. {note}"
 
             title = str(info.get("title") or "")
             description = str(info.get("description") or "")
@@ -109,7 +127,7 @@ def extract_social_video_and_metadata(
 
             meta = {
                 "title": title,
-                "description": description[:1000],
+                "description": description[:1200],
                 "uploader": uploader,
                 "upload_date": upload_date,
                 "duration": duration,
@@ -117,7 +135,11 @@ def extract_social_video_and_metadata(
             }
 
             if not video_path:
-                note = f"Extracted metadata for '{title}', but video stream download was blocked or unavailable."
+                # If video wasn't downloaded, check if OpenGraph has better caption
+                og_content, _, _ = extract_article_content(url)
+                if og_content.get("description") and len(og_content["description"]) > len(description):
+                    meta["description"] = og_content["description"]
+                note = f"Extracted post caption for '{title or uploader}', but video stream required authentication or was restricted."
                 return None, meta, True, note
 
             note = f"Successfully streamed social video: '{title[:60]}' ({duration or 15}s) from {uploader}."
@@ -125,9 +147,11 @@ def extract_social_video_and_metadata(
             return video_path, meta, False, note
 
     except Exception as exc:
-        error_msg = f"FALLBACK: Social video extraction error ({type(exc).__name__}: {str(exc)[:150]})."
-        logger.warning(error_msg)
-        return None, {}, True, error_msg
+        # Graceful fallback to OpenGraph web extraction
+        logger.warning(f"yt-dlp stream extraction error: {exc}. Falling back to OpenGraph scraper...")
+        og_content, _, og_note = extract_article_content(url)
+        error_msg = f"FALLBACK: Social video stream unavailable ({type(exc).__name__}). Extracted metadata: {og_note}"
+        return None, og_content, True, error_msg
 
 
 def extract_article_content(url: str) -> Tuple[Dict[str, Any], bool, str]:
