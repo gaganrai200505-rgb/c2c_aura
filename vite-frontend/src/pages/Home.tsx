@@ -306,7 +306,7 @@ function HeroDropzone({ onFile }: { onFile: (f: File) => void }) {
           <span style={{ color: "#fff" }}>DNA</span>
         </h1>
         <p style={{ color: "#64748b", fontSize: 15, maxWidth: 360, margin: "0 auto", lineHeight: 1.7 }}>
-          Forensic media analysis powered by AI.{" "}
+          Forensic media analysis powered by AURA.AI.{" "}
           <span style={{ color: "#f59e0b" }}>Never a binary verdict</span> — always Evidence, Confidence &amp; Uncertainty.
         </p>
       </div>
