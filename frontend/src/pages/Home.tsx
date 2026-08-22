@@ -6,7 +6,17 @@ import {
 } from "lucide-react";
 import type { AnalysisState, ForensicSignal, MediaDNAReport } from "../types/truthdna";
 
-const BASE_API = (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(/\/$/, "");
+function getBaseApiUrl(): string {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/$/, "");
+  }
+  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+    return "https://lumina-lens-rss1.onrender.com";
+  }
+  return "http://localhost:8000";
+}
+
+const BASE_API = getBaseApiUrl();
 const API_ANALYZE_MEDIA = `${BASE_API}/api/analyze`;
 const API_ANALYZE_LINK  = `${BASE_API}/api/analyze-link`;
 const API_ANALYZE_CLAIM = `${BASE_API}/api/analyze-claim`;
